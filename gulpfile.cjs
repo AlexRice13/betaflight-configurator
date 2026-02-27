@@ -239,13 +239,11 @@ function buildNWApps(platforms, flavor, dir, done) {
         flavor: flavor,
     }, nwBuilderOptions));
 
-    builder.on('log', console.log);
-    builder.build(function(err) {
-        if (err) {
-            console.error('Error building NW apps:', err);
-            process.exit(1);
-        }
+    builder.build().then(function() {
         done();
+    }).catch(function(err) {
+        console.error('Error building NW apps:', err);
+        process.exit(1);
     });
 }
 
