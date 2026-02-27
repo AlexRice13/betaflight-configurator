@@ -16,6 +16,7 @@
 
 import { execSync } from "node:child_process";
 import fs from "node:fs";
+import https from "node:https";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -105,9 +106,49 @@ function copyDirSync(src, dest) {
     }
 }
 
+/**
+ * Resolve an NW.js version keyword ("latest", "stable", "lts") to a
+ * concrete semver string by fetching the official manifest.
+ * If `version` is already a concrete version it is returned as-is.
+ */
+async function resolveNwVersion(version) {
+    if (!["latest", "stable", "lts"].includes(version)) {
+        return version;
+    }
+    return new Promise((resolve, reject) => {
+        https.get("https://nwjs.io/versions.json", (res) => {
+            if (res.statusCode !== 200) {
+                reject(new Error(`NW.js version manifest returned HTTP ${res.statusCode}`));
+                return;
+            }
+            let data = "";
+            res.on("data", (chunk) => (data += chunk));
+            res.on("end", () => {
+                try {
+                    const manifest = JSON.parse(data);
+                    const resolved = manifest[version];
+                    if (!resolved) {
+                        reject(new Error(`NW.js version keyword "${version}" not found in manifest`));
+                        return;
+                    }
+                    resolve(resolved.replace("v", ""));
+                } catch (e) {
+                    reject(new Error(`Failed to parse NW.js version manifest: ${e.message}`));
+                }
+            });
+            res.on("error", reject);
+        }).on("error", reject);
+    });
+}
+
 async function buildDesktop() {
+    // Resolve version keyword before passing to nw-builder, because
+    // nw-builder's init() fires getReleaseInfo() without awaiting it,
+    // leaving "stable"/"latest" unresolved when downloadNwjs() runs.
+    const resolvedVersion = await resolveNwVersion(NW_VERSION);
+
     console.log(`Building for platforms: ${platforms.join(", ")}...`);
-    console.log(`NW.js version: ${NW_VERSION}`);
+    console.log(`NW.js version: ${resolvedVersion}`);
 
     // Clean release directory
     if (fs.existsSync(RELEASE_DIR)) {
@@ -126,16 +167,18 @@ async function buildDesktop() {
     const originalCwd = process.cwd();
     process.chdir(APPS_DIR);
 
+    // NOTE: Do not use buildType "versioned" — nw-builder's parse()
+    // is called twice in init(), each time appending " - v{version}"
+    // to appName, then createReleaseFolder() appends it a third time.
     const nw = new NwBuilder({
         files: ["**/*"],
-        version: NW_VERSION,
+        version: resolvedVersion,
         flavor: "normal",
         platforms: platforms,
         buildDir: RELEASE_DIR,
         cacheDir: CACHE_DIR,
-        appName: "betaflight-app",
+        appName: `betaflight-app - v${pkg.version}`,
         appVersion: pkg.version,
-        buildType: "versioned",
         winIco: platforms.includes("win64") ? path.join(rootDir, "src", "images", "bf_icon.ico") : undefined,
         macIcns: platforms.includes("osx64") ? path.join(rootDir, "src", "images", "bf_icon.icns") : undefined,
         zip: false,
