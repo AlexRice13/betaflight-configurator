@@ -54,6 +54,13 @@ class NWSerial extends EventTarget {
         this._pollInterval = setInterval(() => this._pollDevices(), 2000);
     }
 
+    _stopDevicePolling() {
+        if (this._pollInterval) {
+            clearInterval(this._pollInterval);
+            this._pollInterval = null;
+        }
+    }
+
     async _pollDevices() {
         if (!this._SerialPort) {
             return;
