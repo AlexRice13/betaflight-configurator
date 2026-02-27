@@ -4,7 +4,6 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const fse = require('fs-extra');
 const path = require('path');
-const NwBuilder = require('nw-builder');
 const os = require('os');
 const gulp = require('gulp');
 
@@ -15,14 +14,7 @@ const RELEASE_DIR = './release/';
 
 const LINUX_INSTALL_DIR = '/opt/betaflight';
 
-const nwBuilderOptions = {
-    version: '0.93.0',
-    files: `${DIST_DIR}**/*`,
-    macIcns: './src/images/bf_icon.icns',
-    macPlist: { 'CFBundleDisplayName': 'Betaflight Configurator' },
-    winIco: './src/images/bf_icon.ico',
-    zip: false,
-};
+const NW_VERSION = '0.93.0';
 
 let metadata = {};
 
@@ -45,7 +37,6 @@ function getInputPlatforms() {
                 platforms.push(arg);
             } else if (arg === 'nowinicon') {
                 console.log('Ignoring winIco');
-                delete nwBuilderOptions.winIco;
             }
         }
     }
@@ -226,25 +217,61 @@ function dist_native_modules(done) {
 // NW.js Build Tasks
 // -----------------
 
-function buildNWApps(platforms, flavor, dir, done) {
+// Convert old-style platform strings to nw-builder 4.x format
+function parsePlatform(platformStr) {
+    if (platformStr === 'osx64') return { platform: 'osx', arch: 'x64' };
+    if (platformStr === 'linux64') return { platform: 'linux', arch: 'x64' };
+    if (platformStr === 'linux32') return { platform: 'linux', arch: 'ia32' };
+    if (platformStr === 'win64') return { platform: 'win', arch: 'x64' };
+    if (platformStr === 'win32') return { platform: 'win', arch: 'ia32' };
+    throw new Error(`Unknown platform: ${platformStr}`);
+}
+
+async function buildNWApps(platforms, flavor, dir, done) {
     if (platforms.length === 0) {
         console.log('No platforms to build for');
         done();
         return;
     }
 
-    const builder = new NwBuilder(Object.assign({
-        buildDir: dir,
-        platforms: platforms,
-        flavor: flavor,
-    }, nwBuilderOptions));
+    const nwbuild = (await import('nw-builder')).default;
 
-    builder.build().then(function() {
-        done();
-    }).catch(function(err) {
-        console.error('Error building NW apps:', err);
-        process.exit(1);
-    });
+    for (const platformStr of platforms) {
+        const { platform, arch } = parsePlatform(platformStr);
+        const outDir = path.join(dir, metadata.name || 'betaflight-app', platformStr);
+
+        const app = {};
+        if (platform === 'osx') {
+            app.name = metadata.productName || 'Betaflight Configurator';
+            app.icon = './src/images/bf_icon.icns';
+            app.CFBundleDisplayName = 'Betaflight Configurator';
+        } else if (platform === 'win') {
+            app.name = metadata.productName || 'Betaflight Configurator';
+            app.icon = './src/images/bf_icon.ico';
+        } else if (platform === 'linux') {
+            app.name = metadata.name || 'betaflight-app';
+            app.icon = './src/images/bf_icon_128.png';
+        }
+
+        console.log(`Building NW.js app for ${platformStr} (${platform}-${arch})...`);
+
+        await nwbuild({
+            mode: 'build',
+            version: NW_VERSION,
+            flavor: flavor,
+            platform: platform,
+            arch: arch,
+            srcDir: DIST_DIR,
+            outDir: outDir,
+            glob: false,
+            app: app,
+            zip: false,
+        });
+
+        console.log(`Built ${platformStr} successfully`);
+    }
+
+    done();
 }
 
 function apps(done) {

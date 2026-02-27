@@ -109,7 +109,7 @@
     "inquirer": "^12.4.2",
     "less": "^4.2.2",
     "lint-staged": "^15.4.3",
-    "nw-builder": "^3.8.6",
+    "nw-builder": "^4.17.5",
     "os": "^0.1.2",
     "postcss": "^8.5.3",
     "prettier": "^3.5.2",
