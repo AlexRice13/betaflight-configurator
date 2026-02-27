@@ -118,8 +118,16 @@ async function buildDesktop() {
     // Use nw-builder programmatic API
     const NwBuilder = (await import("nw-builder")).default;
 
+    // nw-builder's copyNwjs() passes each globbed file path as the last
+    // argument to path.resolve() when building the destination.  If the
+    // file path is absolute, path.resolve() returns it unchanged, making
+    // src === dest and triggering EINVAL.  Work around this by switching
+    // CWD into the app directory so the glob returns relative paths.
+    const originalCwd = process.cwd();
+    process.chdir(APPS_DIR);
+
     const nw = new NwBuilder({
-        files: [path.join(APPS_DIR, "**", "*")],
+        files: ["**/*"],
         version: NW_VERSION,
         flavor: "normal",
         platforms: platforms,
@@ -140,6 +148,8 @@ async function buildDesktop() {
     } catch (err) {
         console.error("Build failed:", err.message || err);
         process.exit(1);
+    } finally {
+        process.chdir(originalCwd);
     }
 }
 
