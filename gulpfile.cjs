@@ -248,6 +248,9 @@ async function buildNWApps(platforms, flavor, dir, done) {
             app.name = metadata.productName || 'Betaflight Configurator';
             app.icon = './src/images/bf_icon.icns';
             app.CFBundleDisplayName = 'Betaflight Configurator';
+            app.LSApplicationCategoryType = 'public.app-category.utilities';
+            app.CFBundleIdentifier = 'com.betaflight.configurator';
+            app.NSHumanReadableCopyright = `Copyright © ${new Date().getFullYear()} ${metadata.author || 'The Betaflight open source project.'}`;
         } else if (platform === 'win') {
             app.name = metadata.productName || 'Betaflight Configurator';
             if (!noWinIcon) {
