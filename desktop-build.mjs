@@ -40,7 +40,7 @@ if (platforms.length === 0) {
     process.exit(1);
 }
 
-const NW_VERSION = "0.94.0";
+const NW_VERSION = "stable";
 const RELEASE_DIR = path.join(rootDir, "release");
 const APPS_DIR = path.join(rootDir, "apps");
 const CACHE_DIR = path.join(rootDir, "cache");
