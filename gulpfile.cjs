@@ -16,6 +16,8 @@ const LINUX_INSTALL_DIR = '/opt/betaflight';
 
 const NW_VERSION = '0.93.0';
 
+let noWinIcon = false;
+
 let metadata = {};
 
 // -----------------
@@ -37,6 +39,7 @@ function getInputPlatforms() {
                 platforms.push(arg);
             } else if (arg === 'nowinicon') {
                 console.log('Ignoring winIco');
+                noWinIcon = true;
             }
         }
     }
@@ -247,7 +250,9 @@ async function buildNWApps(platforms, flavor, dir, done) {
             app.CFBundleDisplayName = 'Betaflight Configurator';
         } else if (platform === 'win') {
             app.name = metadata.productName || 'Betaflight Configurator';
-            app.icon = './src/images/bf_icon.ico';
+            if (!noWinIcon) {
+                app.icon = './src/images/bf_icon.ico';
+            }
         } else if (platform === 'linux') {
             app.name = metadata.name || 'betaflight-app';
             app.icon = './src/images/bf_icon_128.png';
