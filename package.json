@@ -20,6 +20,10 @@
     "android:run": "vite build && node capacitor.config.generator.mjs && npx cap run android",
     "android:sync": "vite build && node capacitor.config.generator.mjs && npx cap sync android",
     "android:release": "vite build && node capacitor.config.generator.mjs && npx cap build android --release",
+    "desktop:win": "node desktop-build.mjs --win64",
+    "desktop:mac": "node desktop-build.mjs --osx64",
+    "desktop:linux": "node desktop-build.mjs --linux64",
+    "desktop:release": "node desktop-build.mjs --win64 --osx64",
     "format": "prettier --write {src,test}/**/*.{js,vue,css,less}",
     "storybook": "start-storybook -p 6006",
     "prepare": "husky"
