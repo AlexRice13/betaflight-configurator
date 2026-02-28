@@ -245,7 +245,7 @@ Model.prototype.rotateTo = function (x, y, z) {
     this.modelWrapper.rotation.y = y;
     this.model.rotation.z = z;
 
-    this.render();
+    this.scheduleRender();
 };
 
 Model.prototype.rotateBy = function (x, y, z) {
@@ -257,7 +257,18 @@ Model.prototype.rotateBy = function (x, y, z) {
     this.model.rotateY(y);
     this.model.rotateZ(z);
 
-    this.render();
+    this.scheduleRender();
+};
+
+Model.prototype.scheduleRender = function () {
+    if (this._renderPending) {
+        return;
+    }
+    this._renderPending = true;
+    requestAnimationFrame(() => {
+        this._renderPending = false;
+        this.render();
+    });
 };
 
 Model.prototype.render = function () {
