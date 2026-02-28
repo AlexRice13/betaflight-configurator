@@ -36,6 +36,7 @@
     "min_height": 550,
     "title": "Betaflight App"
   },
+  "chromium-args": "--ignore-gpu-blocklist",
   "repository": {
     "type": "git",
     "url": "github.com/betaflight/betaflight-configurator"

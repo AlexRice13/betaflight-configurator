@@ -191,6 +191,7 @@ function dist_package(done) {
         license: pkg.license,
         main: 'index.html',
         window: pkg.window,
+        'chromium-args': pkg['chromium-args'] || '',
         dependencies: {
             'serialport': '^12.0.0',
         },

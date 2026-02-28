@@ -47,12 +47,19 @@ const Model = function (wrapper, canvas) {
     this.canvas = canvas;
 
     if (this.useWebGLRenderer) {
-        this.renderer = new THREE.WebGLRenderer({
-            canvas: this.canvas[0],
-            alpha: true,
-            antialias: true, // enable or disable antialiasing for performance
-        });
-    } else {
+        try {
+            this.renderer = new THREE.WebGLRenderer({
+                canvas: this.canvas[0],
+                alpha: true,
+                antialias: true, // enable or disable antialiasing for performance
+            });
+        } catch (e) {
+            console.warn("WebGLRenderer creation failed, falling back to CanvasRenderer:", e);
+            this.useWebGLRenderer = false;
+        }
+    }
+
+    if (!this.useWebGLRenderer) {
         console.log("Starting in low performance rendering mode");
         this.renderer = new CanvasRenderer({
             canvas: this.canvas[0],
