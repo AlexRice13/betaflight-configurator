@@ -36,7 +36,7 @@
     "min_height": 550,
     "title": "Betaflight App"
   },
-  "chromium-args": "--ignore-gpu-blocklist --disable-accelerated-2d-canvas",
+  "chromium-args": "--disable-accelerated-2d-canvas --disable-gpu-compositing",
   "repository": {
     "type": "git",
     "url": "github.com/betaflight/betaflight-configurator"

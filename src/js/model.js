@@ -43,6 +43,7 @@ const Model = function (wrapper, canvas) {
 
     this.useWebGLRenderer = this.canUseWebGLRenderer();
     this._renderPending = false;
+    this._contextLost = false;
 
     this.wrapper = wrapper;
     this.canvas = canvas;
@@ -53,6 +54,26 @@ const Model = function (wrapper, canvas) {
                 canvas: this.canvas[0],
                 alpha: true,
                 antialias: true, // enable or disable antialiasing for performance
+            });
+
+            // Handle GPU context loss gracefully to prevent app crashes
+            this.canvas[0].addEventListener("webglcontextlost", (event) => {
+                event.preventDefault();
+                console.warn("WebGL context lost, stopping rendering");
+                this._contextLost = true;
+            });
+
+            this.canvas[0].addEventListener("webglcontextrestored", () => {
+                console.log("WebGL context restored, reinitializing renderer");
+                this._contextLost = false;
+                this.renderer.dispose();
+                this.renderer = new THREE.WebGLRenderer({
+                    canvas: this.canvas[0],
+                    alpha: true,
+                    antialias: true,
+                });
+                this.renderer.setSize(this.wrapper.width(), this.wrapper.height());
+                this.render();
             });
         } catch (e) {
             console.warn("WebGLRenderer creation failed, falling back to CanvasRenderer:", e);
@@ -273,7 +294,7 @@ Model.prototype.scheduleRender = function () {
 };
 
 Model.prototype.render = function () {
-    if (!this.model) {
+    if (!this.model || this._contextLost) {
         return;
     }
 
