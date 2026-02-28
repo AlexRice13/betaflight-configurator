@@ -210,7 +210,7 @@ PortHandler.sortPorts = function (ports) {
 };
 
 PortHandler.selectActivePort = function (suggestedDevice = false) {
-    const deviceFilter = ["AT32", "CP210", "SPR", "STM"];
+    const deviceFilter = ["AT32", "CP210", "SPR", "STM", "Silicon Labs", "Geehy", "Raspberry Pi"];
     let selectedPort;
 
     // First check for active connections
