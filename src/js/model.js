@@ -43,6 +43,7 @@ const Model = function (wrapper, canvas) {
 
     this.useWebGLRenderer = this.canUseWebGLRenderer();
     this._renderPending = false;
+    this._contextLost = false;
 
     this.wrapper = wrapper;
     this.canvas = canvas;
@@ -63,8 +64,15 @@ const Model = function (wrapper, canvas) {
             });
 
             this.canvas[0].addEventListener("webglcontextrestored", () => {
-                console.log("WebGL context restored, resuming rendering");
+                console.log("WebGL context restored, reinitializing renderer");
                 this._contextLost = false;
+                this.renderer.dispose();
+                this.renderer = new THREE.WebGLRenderer({
+                    canvas: this.canvas[0],
+                    alpha: true,
+                    antialias: true,
+                });
+                this.renderer.setSize(this.wrapper.width(), this.wrapper.height());
                 this.render();
             });
         } catch (e) {
