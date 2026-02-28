@@ -42,17 +42,25 @@ const Model = function (wrapper, canvas) {
     this.detailTolerance = 10; // Default value, can be modified
 
     this.useWebGLRenderer = this.canUseWebGLRenderer();
+    this._renderPending = false;
 
     this.wrapper = wrapper;
     this.canvas = canvas;
 
     if (this.useWebGLRenderer) {
-        this.renderer = new THREE.WebGLRenderer({
-            canvas: this.canvas[0],
-            alpha: true,
-            antialias: true, // enable or disable antialiasing for performance
-        });
-    } else {
+        try {
+            this.renderer = new THREE.WebGLRenderer({
+                canvas: this.canvas[0],
+                alpha: true,
+                antialias: true, // enable or disable antialiasing for performance
+            });
+        } catch (e) {
+            console.warn("WebGLRenderer creation failed, falling back to CanvasRenderer:", e);
+            this.useWebGLRenderer = false;
+        }
+    }
+
+    if (!this.useWebGLRenderer) {
         console.log("Starting in low performance rendering mode");
         this.renderer = new CanvasRenderer({
             canvas: this.canvas[0],
@@ -238,7 +246,7 @@ Model.prototype.rotateTo = function (x, y, z) {
     this.modelWrapper.rotation.y = y;
     this.model.rotation.z = z;
 
-    this.render();
+    this.scheduleRender();
 };
 
 Model.prototype.rotateBy = function (x, y, z) {
@@ -250,7 +258,18 @@ Model.prototype.rotateBy = function (x, y, z) {
     this.model.rotateY(y);
     this.model.rotateZ(z);
 
-    this.render();
+    this.scheduleRender();
+};
+
+Model.prototype.scheduleRender = function () {
+    if (this._renderPending) {
+        return;
+    }
+    this._renderPending = true;
+    requestAnimationFrame(() => {
+        this._renderPending = false;
+        this.render();
+    });
 };
 
 Model.prototype.render = function () {
