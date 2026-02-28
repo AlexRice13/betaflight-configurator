@@ -56,3 +56,4 @@ capacitor-plugins/*/android/bin/
 /CLAUDE.md
 /.claude
 /AGENTS.md
+package-lock.json
