@@ -42,6 +42,7 @@ const Model = function (wrapper, canvas) {
     this.detailTolerance = 10; // Default value, can be modified
 
     this.useWebGLRenderer = this.canUseWebGLRenderer();
+    this._renderPending = false;
 
     this.wrapper = wrapper;
     this.canvas = canvas;
