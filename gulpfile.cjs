@@ -210,8 +210,14 @@ function dist_native_modules(done) {
         execSync('npm install --production', {
             cwd: path.resolve(DIST_DIR),
             stdio: 'inherit',
+            env: {
+                ...process.env,
+                npm_config_runtime: 'nw',
+                npm_config_target: NW_VERSION,
+                npm_config_node_gyp: require.resolve('nw-gyp/bin/nw-gyp'),
+            },
         });
-        console.log('Native serial modules installed successfully');
+        console.log('Native serial modules installed and rebuilt for NW.js successfully');
     } catch (error) {
         console.warn('Warning: Failed to install native modules:', error.message);
         console.warn('The desktop build will fall back to Web Serial API.');
