@@ -42,7 +42,7 @@ import "./main";
 
 import GUI from "./gui";
 import { registerSW } from "virtual:pwa-register";
-import { isAndroid } from "./utils/checkCompatibility.js";
+import { isAndroid, isNWjs } from "./utils/checkCompatibility.js";
 import { createApp } from "vue";
 import { pinia } from "./pinia_instance";
 import GlobalDialogs from "@/components/dialogs/GlobalDialogs.vue";
@@ -52,8 +52,9 @@ const dialogApp = createApp(GlobalDialogs);
 dialogApp.use(pinia);
 dialogApp.mount("#dialog-container");
 
-// Skip PWA update/offline prompts on Android native builds where they are unnecessary
-if (!isAndroid()) {
+// Skip PWA update/offline prompts on Android native builds and NW.js desktop builds
+// where service workers are unnecessary and can interfere with local file loading
+if (!isAndroid() && !isNWjs()) {
     const updateSW = registerSW({
         onNeedRefresh() {
             console.log("Detected onNeedRefresh");

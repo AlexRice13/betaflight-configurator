@@ -342,6 +342,10 @@ class GuiControl {
         // yesNoDialogSettings:
         // title, text, buttonYesText, buttonNoText, buttonYesCallback, buttonNoCallback
         const dialog = $(".dialogYesNo");
+        if (!dialog.length || !dialog[0]) {
+            console.error("YesNo dialog element not found");
+            return;
+        }
         const title = dialog.find(".dialogYesNoTitle");
         const content = dialog.find(".dialogYesNoContent");
         const buttonYes = dialog.find(".dialogYesNo-yesButton");
@@ -365,12 +369,26 @@ class GuiControl {
             yesNoDialogSettings.buttonNoCallback?.();
         });
 
-        dialog[0].showModal();
+        try {
+            // Close first if already open, to avoid InvalidStateError
+            if (dialog[0].open) {
+                dialog[0].close();
+            }
+            dialog[0].showModal();
+        } catch (e) {
+            console.error("Failed to show YesNo dialog:", e);
+            // Fallback: show dialog using open attribute
+            dialog[0].setAttribute("open", "");
+        }
     }
     showWaitDialog(waitDialogSettings) {
         // waitDialogSettings:
         // title, buttonCancelCallback
         const dialog = $(".dialogWait")[0];
+        if (!dialog) {
+            console.error("Wait dialog element not found");
+            return null;
+        }
         const title = $(".dialogWaitTitle");
         const buttonCancel = $(".dialogWait-cancelButton");
 
@@ -384,7 +402,15 @@ class GuiControl {
             waitDialogSettings.buttonCancelCallback?.();
         });
 
-        dialog.showModal();
+        try {
+            if (dialog.open) {
+                dialog.close();
+            }
+            dialog.showModal();
+        } catch (e) {
+            console.error("Failed to show Wait dialog:", e);
+            dialog.setAttribute("open", "");
+        }
         return dialog;
     }
     showInformationDialog(informationDialogSettings) {
@@ -392,6 +418,11 @@ class GuiControl {
         // title, text, buttonConfirmText
         return new Promise((resolve) => {
             const dialog = $(".dialogInformation");
+            if (!dialog.length || !dialog[0]) {
+                console.error("Information dialog element not found");
+                resolve();
+                return;
+            }
             const title = dialog.find(".dialogInformationTitle");
             const content = dialog.find(".dialogInformationContent");
             const buttonConfirm = dialog.find(".dialogInformation-confirmButton");
@@ -407,7 +438,15 @@ class GuiControl {
                 resolve();
             });
 
-            dialog[0].showModal();
+            try {
+                if (dialog[0].open) {
+                    dialog[0].close();
+                }
+                dialog[0].showModal();
+            } catch (e) {
+                console.error("Failed to show Information dialog:", e);
+                dialog[0].setAttribute("open", "");
+            }
         });
     }
     showInteractiveDialog(interactiveDialogSettings) {
@@ -415,6 +454,11 @@ class GuiControl {
         // title, text, buttonCloseText
         return new Promise((resolve) => {
             const dialog = $(".dialogInteractive");
+            if (!dialog.length || !dialog[0]) {
+                console.error("Interactive dialog element not found");
+                resolve();
+                return;
+            }
             const title = dialog.find(".dialogInteractiveTitle");
             const content = dialog.find(".dialogInteractiveContent");
             const buttonClose = dialog.find(".dialogInteractive-closeButton");
@@ -430,7 +474,15 @@ class GuiControl {
                 resolve();
             });
 
-            dialog[0].showModal();
+            try {
+                if (dialog[0].open) {
+                    dialog[0].close();
+                }
+                dialog[0].showModal();
+            } catch (e) {
+                console.error("Failed to show Interactive dialog:", e);
+                dialog[0].setAttribute("open", "");
+            }
         });
     }
     escapeHtml(unsafe) {
