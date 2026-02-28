@@ -191,9 +191,6 @@ function dist_package(done) {
         license: pkg.license,
         main: 'index.html',
         window: pkg.window,
-        dependencies: {
-            'serialport': '^12.0.0',
-        },
     };
     if (pkg['chromium-args']) {
         distPkg['chromium-args'] = pkg['chromium-args'];
@@ -202,20 +199,6 @@ function dist_package(done) {
         path.join(DIST_DIR, 'package.json'),
         JSON.stringify(distPkg, null, 2),
     );
-    done();
-}
-
-function dist_native_modules(done) {
-    try {
-        execSync('npm install --production', {
-            cwd: path.resolve(DIST_DIR),
-            stdio: 'inherit',
-        });
-        console.log('Native serial modules installed successfully');
-    } catch (error) {
-        console.warn('Warning: Failed to install native modules:', error.message);
-        console.warn('The desktop build will fall back to Web Serial API.');
-    }
     done();
 }
 
@@ -547,7 +530,6 @@ const distRelease = gulp.series(
     dist_locales,
     dist_resources,
     dist_package,
-    dist_native_modules,
 );
 
 const distDebug = gulp.series(
@@ -558,7 +540,6 @@ const distDebug = gulp.series(
     dist_locales,
     dist_resources,
     dist_package,
-    dist_native_modules,
 );
 
 // Release build: dist → NW.js apps → platform packages

@@ -2,8 +2,7 @@ import WebSerial from "./protocols/WebSerial.js";
 import WebBluetooth from "./protocols/WebBluetooth.js";
 import Websocket from "./protocols/WebSocket.js";
 import VirtualSerial from "./protocols/VirtualSerial.js";
-import NWSerial from "./protocols/NWSerial.js";
-import { isAndroid, isNWjs } from "./utils/checkCompatibility.js";
+import { isAndroid } from "./utils/checkCompatibility.js";
 import CapacitorSerial from "./protocols/CapacitorSerial.js";
 import CapacitorBle from "./protocols/CapacitorBle.js";
 import CapacitorTcp from "./protocols/CapacitorTcp.js";
@@ -22,14 +21,7 @@ class Serial extends EventTarget {
 
         // Initialize protocols with metadata for easier lookup
 
-        if (isNWjs()) {
-            const nwSerial = new NWSerial();
-            this._protocols = [
-                { name: "serial", instance: nwSerial.available ? nwSerial : new WebSerial() },
-                { name: "bluetooth", instance: new WebBluetooth() },
-                { name: "tcp", instance: new Websocket() },
-            ];
-        } else if (isAndroid()) {
+        if (isAndroid()) {
             this._protocols = [
                 { name: "serial", instance: new CapacitorSerial() },
                 { name: "bluetooth", instance: new CapacitorBle() },
