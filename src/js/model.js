@@ -54,6 +54,19 @@ const Model = function (wrapper, canvas) {
                 alpha: true,
                 antialias: true, // enable or disable antialiasing for performance
             });
+
+            // Handle GPU context loss gracefully to prevent app crashes
+            this.canvas[0].addEventListener("webglcontextlost", (event) => {
+                event.preventDefault();
+                console.warn("WebGL context lost, stopping rendering");
+                this._contextLost = true;
+            });
+
+            this.canvas[0].addEventListener("webglcontextrestored", () => {
+                console.log("WebGL context restored, resuming rendering");
+                this._contextLost = false;
+                this.render();
+            });
         } catch (e) {
             console.warn("WebGLRenderer creation failed, falling back to CanvasRenderer:", e);
             this.useWebGLRenderer = false;
@@ -273,7 +286,7 @@ Model.prototype.scheduleRender = function () {
 };
 
 Model.prototype.render = function () {
-    if (!this.model) {
+    if (!this.model || this._contextLost) {
         return;
     }
 
