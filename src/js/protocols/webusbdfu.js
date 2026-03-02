@@ -19,6 +19,8 @@ import { gui_log } from "../gui_log";
 import { usbDevices } from "./devices";
 import NotificationManager from "../utils/notifications";
 import { get as getConfig } from "../ConfigStorage";
+import { isNWjs } from "../utils/checkCompatibility";
+import NWUsbManager from "./NWUsb";
 
 class WEBUSBDFU_protocol extends EventTarget {
     constructor() {
@@ -77,13 +79,31 @@ class WEBUSBDFU_protocol extends EventTarget {
         this.flash_layout = { start_address: 0, total_size: 0, sectors: [] };
         this.transferSize = 2048; // Default USB DFU transfer size for F3,F4 and F7
 
-        if (!navigator?.usb) {
+        // In NW.js, use chrome.usb API via NWUsbManager (proven approach from
+        // 10.10-maintenance branch). This uses Chromium's native USB stack
+        // directly, no npm native addons or permission dialogs needed.
+        this._usb = null;
+
+        if (isNWjs() && typeof chrome !== "undefined" && chrome.usb) {
+            try {
+                this._usb = new NWUsbManager(usbDevices.filters);
+                console.log(`${this.logHead} Using chrome.usb API for DFU`);
+            } catch (error) {
+                console.warn(`${this.logHead} Failed to initialize chrome.usb:`, error);
+            }
+        }
+
+        if (!this._usb) {
+            this._usb = navigator?.usb ?? null;
+        }
+
+        if (!this._usb) {
             console.error(`${this.logHead} WebUSB API not supported`);
             return;
         }
 
-        navigator.usb.addEventListener("connect", (e) => this.handleNewDevice(e.device));
-        navigator.usb.addEventListener("disconnect", (e) => this.handleRemovedDevice(e.device));
+        this._usb.addEventListener("connect", (e) => this.handleNewDevice(e.device));
+        this._usb.addEventListener("disconnect", (e) => this.handleRemovedDevice(e.device));
     }
     handleNewDevice(device) {
         const added = this.createPort(device);
@@ -105,7 +125,7 @@ class WEBUSBDFU_protocol extends EventTarget {
         };
     }
     async getDevices() {
-        const ports = await navigator.usb.getDevices(usbDevices);
+        const ports = await this._usb.getDevices();
         const customPorts = ports.map(function (port) {
             return this.createPort(port);
         }, this);
@@ -115,7 +135,7 @@ class WEBUSBDFU_protocol extends EventTarget {
     async requestPermission() {
         let newPermissionPort = null;
         try {
-            const userSelectedPort = await navigator.usb.requestDevice(usbDevices);
+            const userSelectedPort = await this._usb.requestDevice(usbDevices);
             console.info("User selected USB device from permissions:", userSelectedPort);
             console.log(
                 `${this.logHead} WebUSB Version: ${userSelectedPort.deviceVersionMajor}.${userSelectedPort.deviceVersionMinor}.${userSelectedPort.deviceVersionSubminor}`,

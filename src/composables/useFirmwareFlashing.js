@@ -280,6 +280,11 @@ export function useFirmwareFlashing(params = {}) {
                 })
                 .catch((error) => {
                     console.error("Permission request failed", error);
+                    flashingMessage?.(
+                        $t?.("firmwareFlasherNoPortSelected") ||
+                            "No valid port detected. Please select a port or connect a device in DFU mode.",
+                        FLASH_MESSAGE_TYPES?.INVALID,
+                    );
                     resetFlashingState?.();
                 });
         }

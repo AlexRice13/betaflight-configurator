@@ -27,7 +27,7 @@ let metadata = {};
 const SELECTED_PLATFORMS = getInputPlatforms();
 
 function getInputPlatforms() {
-    const supportedPlatforms = ['linux64', 'linux32', 'osx64', 'win32', 'win64', 'android'];
+    const supportedPlatforms = ['linux64', 'linux32', 'osx64', 'osxarm64', 'win32', 'win64', 'android'];
     const platforms = [];
     const regEx = /--(\w+)/;
 
@@ -64,7 +64,7 @@ function getInputPlatforms() {
 function getDefaultPlatform() {
     switch (os.platform()) {
     case 'darwin':
-        return 'osx64';
+        return os.arch() === 'arm64' ? 'osxarm64' : 'osx64';
     case 'linux':
         return 'linux64';
     case 'win32':
@@ -226,6 +226,7 @@ function dist_native_modules(done) {
 // Convert old-style platform strings to nw-builder 4.x format
 function parsePlatform(platformStr) {
     if (platformStr === 'osx64') return { platform: 'osx', arch: 'x64' };
+    if (platformStr === 'osxarm64') return { platform: 'osx', arch: 'arm64' };
     if (platformStr === 'linux64') return { platform: 'linux', arch: 'x64' };
     if (platformStr === 'linux32') return { platform: 'linux', arch: 'ia32' };
     if (platformStr === 'win64') return { platform: 'win', arch: 'x64' };
@@ -522,8 +523,8 @@ function listReleaseTasks(appDirectory) {
             tasks.push(function(done) { release_zip(platform, appDirectory, done); });
             tasks.push(function(done) { release_win(platform, appDirectory, done); });
         }
-        if (platform === 'osx64') {
-            tasks.push(function(done) { release_zip('osx64', appDirectory, done); });
+        if (platform === 'osx64' || platform === 'osxarm64') {
+            tasks.push(function(done) { release_zip(platform, appDirectory, done); });
         }
     }
 
