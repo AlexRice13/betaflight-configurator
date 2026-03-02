@@ -20,6 +20,7 @@ import { usbDevices } from "./devices";
 import NotificationManager from "../utils/notifications";
 import { get as getConfig } from "../ConfigStorage";
 import { isNWjs } from "../utils/checkCompatibility";
+import NWUsbManager from "./NWUsb";
 
 class WEBUSBDFU_protocol extends EventTarget {
     constructor() {
@@ -78,18 +79,17 @@ class WEBUSBDFU_protocol extends EventTarget {
         this.flash_layout = { start_address: 0, total_size: 0, sectors: [] };
         this.transferSize = 2048; // Default USB DFU transfer size for F3,F4 and F7
 
-        // In NW.js, prefer native USB module over navigator.usb because
-        // browser WebUSB permission grants don't persist and the dialog
-        // doesn't work reliably in NW.js on macOS ARM64.
+        // In NW.js, use chrome.usb API via NWUsbManager (proven approach from
+        // 10.10-maintenance branch). This uses Chromium's native USB stack
+        // directly, no npm native addons or permission dialogs needed.
         this._usb = null;
 
-        if (isNWjs()) {
+        if (isNWjs() && typeof chrome !== "undefined" && chrome.usb) {
             try {
-                const { WebUSB } = globalThis.nw.require("usb");
-                this._usb = new WebUSB({ allowedDevices: usbDevices.filters });
-                console.log(`${this.logHead} Using native USB module for DFU`);
+                this._usb = new NWUsbManager(usbDevices.filters);
+                console.log(`${this.logHead} Using chrome.usb API for DFU`);
             } catch (error) {
-                console.warn(`${this.logHead} Failed to load native USB module:`, error);
+                console.warn(`${this.logHead} Failed to initialize chrome.usb:`, error);
             }
         }
 
