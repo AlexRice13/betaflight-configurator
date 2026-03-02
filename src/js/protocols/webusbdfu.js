@@ -78,17 +78,23 @@ class WEBUSBDFU_protocol extends EventTarget {
         this.flash_layout = { start_address: 0, total_size: 0, sectors: [] };
         this.transferSize = 2048; // Default USB DFU transfer size for F3,F4 and F7
 
-        // Try WebUSB API first, then fall back to native USB module in NW.js
-        this._usb = navigator?.usb ?? null;
+        // In NW.js, prefer native USB module over navigator.usb because
+        // browser WebUSB permission grants don't persist and the dialog
+        // doesn't work reliably in NW.js on macOS ARM64.
+        this._usb = null;
 
-        if (!this._usb && isNWjs()) {
+        if (isNWjs()) {
             try {
                 const { WebUSB } = globalThis.nw.require("usb");
-                this._usb = new WebUSB({ allowAllDevices: true });
+                this._usb = new WebUSB({ allowedDevices: usbDevices.filters });
                 console.log(`${this.logHead} Using native USB module for DFU`);
             } catch (error) {
                 console.warn(`${this.logHead} Failed to load native USB module:`, error);
             }
+        }
+
+        if (!this._usb) {
+            this._usb = navigator?.usb ?? null;
         }
 
         if (!this._usb) {
@@ -119,7 +125,7 @@ class WEBUSBDFU_protocol extends EventTarget {
         };
     }
     async getDevices() {
-        const ports = await this._usb.getDevices(usbDevices);
+        const ports = await this._usb.getDevices();
         const customPorts = ports.map(function (port) {
             return this.createPort(port);
         }, this);
