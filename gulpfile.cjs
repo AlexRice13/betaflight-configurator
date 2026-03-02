@@ -193,6 +193,7 @@ function dist_package(done) {
         window: pkg.window,
         dependencies: {
             'serialport': '^12.0.0',
+            'usb': '^2.14.0',
         },
     };
     if (pkg['chromium-args']) {

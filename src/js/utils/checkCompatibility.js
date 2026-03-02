@@ -166,7 +166,9 @@ export function checkBluetoothSupport() {
 
 export function checkUsbSupport() {
     let result = false;
-    if (isAndroid()) {
+    if (isNWjs()) {
+        result = true;
+    } else if (isAndroid()) {
         // Not implemented yet
     } else if (navigator.usb) {
         result = true;
