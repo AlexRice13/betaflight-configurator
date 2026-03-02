@@ -25,6 +25,7 @@
     "desktop:debug-release": "gulp debug-release",
     "desktop:release-win64": "gulp release --win64",
     "desktop:release-osx64": "gulp release --osx64",
+    "desktop:release-osxarm64": "gulp release --osxarm64",
     "desktop:release-linux64": "gulp release --linux64",
     "storybook": "start-storybook -p 6006",
     "prepare": "husky"
