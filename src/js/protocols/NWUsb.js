@@ -186,9 +186,7 @@ class NWUsbDevice {
                         resolve({ status: "stall" });
                         return;
                     }
-                    const data = result.data
-                        ? new DataView(new Uint8Array(result.data).buffer)
-                        : new DataView(new ArrayBuffer(0));
+                    const data = result.data ? new DataView(result.data) : new DataView(new ArrayBuffer(0));
                     resolve({ status: "ok", data });
                 },
             );
